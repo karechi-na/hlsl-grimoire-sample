@@ -41,16 +41,22 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     // 頂点配列を定義
     SimpleVertex vertices[] = {
         {
+            //三角形左下
             {-0.5f, -0.5f, 0.0f},
-            { 1.0f, 0.0f, 0.0f }
+            { 0.0f, 0.0f, 1.0f} //青 3ポイント問題
+			//{ 1.0f, 0.0f, 0.0f } // 赤
         },
         {
+			//三角形上
             { 0.0f, 0.5f, 0.0f },
-            { 0.0f, 1.0f, 0.0f }
+			{ 1.0f, 1.0f, 1.0f} //白 3ポイント問題
+			//{ 0.0f, 1.0f, 0.0f } // 緑
         },
         {
+			//三角形右下
             { 0.5f, -0.5f, 0.0f },
-            { 0.0f, 0.0f, 1.0f }
+			{ 1.0f, 0.0f, 0.0f} //赤 3ポイント問題
+			//{ 0.0f, 0.0f, 1.0f } // 青
         }
     };
 
