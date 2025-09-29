@@ -42,21 +42,38 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     SimpleVertex vertices[] = {
         {
             //三角形左下
-            {-0.5f, -0.5f, 0.0f},
-            { 0.0f, 0.0f, 1.0f} //青 3ポイント問題
-			//{ 1.0f, 0.0f, 0.0f } // 赤
+            //{-0.5f, -0.5f, 0.0f},
+            //{ 0.0f, 0.0f, 1.0f} //青 3ポイント問題
+			////{ 1.0f, 0.0f, 0.0f } // 赤
+
+            //四角形左下
+            { -0.5f, -0.5f, 0.0f },
+			{ 1.0f, 1.0f, 1.0f } //青 4ポイント問題
         },
         {
 			//三角形上
-            { 0.0f, 0.5f, 0.0f },
-			{ 1.0f, 1.0f, 1.0f} //白 3ポイント問題
-			//{ 0.0f, 1.0f, 0.0f } // 緑
+            //{ 0.0f, 0.5f, 0.0f },
+			//{ 1.0f, 1.0f, 1.0f} //白 3ポイント問題
+			////{ 0.0f, 1.0f, 0.0f } // 緑
+
+            //四角形左上
+            {-0.5f, 0.5f, 0.0f},
+			{ 0.0f, 0.0f, 1.0f} //青
         },
         {
 			//三角形右下
-            { 0.5f, -0.5f, 0.0f },
-			{ 1.0f, 0.0f, 0.0f} //赤 3ポイント問題
-			//{ 0.0f, 0.0f, 1.0f } // 青
+            //{ 0.5f, -0.5f, 0.0f },
+			//{ 1.0f, 0.0f, 0.0f} //赤 3ポイント問題
+			////{ 0.0f, 0.0f, 1.0f } // 青
+
+            //四角形右上
+            { 0.5f, 0.5f, 0.0f },
+			{ 0.0f, 1.0f, 0.0f } //緑
+        },
+        {
+			//四角形右下
+            {0.5f, -0.5f, 0.0f},
+			{ 1.0f, 0.0f, 0.0f} //赤
         }
     };
 
@@ -67,7 +84,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     // 5. 三角形のインデックスバッファを作成
     //インデックス配列
     uint16_t indices[] = {
-        0,1,2
+        0,1,2,
+		0,2,3 // 四角形を2つの三角形に分割
     };
     IndexBuffer triangleIB;
     triangleIB.Init(sizeof(indices), 2);
@@ -99,7 +117,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         // 5. インデックスバッファを設定
         renderContext.SetIndexBuffer(triangleIB);
         // 6. ドローコール
-        renderContext.DrawIndexed(3);
+		renderContext.DrawIndexed(6); // 四角形を描画するために6インデックスを使用
 
         /// //////////////////////////////////////
         // 絵を描くコードを書くのはここまで！！！
