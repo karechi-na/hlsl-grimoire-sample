@@ -47,8 +47,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			////{ 1.0f, 0.0f, 0.0f } // 赤
 
             //四角形左下
-            { -0.5f, -0.5f, 0.0f },
-			{ 1.0f, 1.0f, 1.0f } //青 4ポイント問題
+            //{ -0.5f, -0.5f, 0.0f },
+			//{ 1.0f, 1.0f, 1.0f } //青 4ポイント問題
+
+            //五角形上
+			{ 0.0f, 0.5f, 0.0f },
+			{ 1.0f, 1.0f, 1.0f } //白
         },
         {
 			//三角形上
@@ -57,8 +61,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			////{ 0.0f, 1.0f, 0.0f } // 緑
 
             //四角形左上
-            {-0.5f, 0.5f, 0.0f},
-			{ 0.0f, 0.0f, 1.0f} //青
+            //{-0.5f, 0.5f, 0.0f},
+			//{ 0.0f, 0.0f, 1.0f} //青
+
+			//五角形右上
+			{ 0.5f, 0.0f, 0.0f },
+			{ 1.0f, 0.0f, 0.0f } //赤
         },
         {
 			//三角形右下
@@ -67,13 +75,26 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			////{ 0.0f, 0.0f, 1.0f } // 青
 
             //四角形右上
-            { 0.5f, 0.5f, 0.0f },
+            //{ 0.5f, 0.5f, 0.0f },
+			//{ 0.0f, 1.0f, 0.0f } //緑
+
+			//五角形右下
+			{ 0.25f, -0.5f, 0.0f },
 			{ 0.0f, 1.0f, 0.0f } //緑
         },
         {
 			//四角形右下
-            {0.5f, -0.5f, 0.0f},
-			{ 1.0f, 0.0f, 0.0f} //赤
+            //{0.5f, -0.5f, 0.0f},
+			//{ 1.0f, 0.0f, 0.0f} //赤
+
+			//五角形左下
+			{ -0.25f, -0.5f, 0.0f },
+			{ 0.0f, 1.0f, 0.0f } //緑
+        },
+        {
+			//五角形左上
+			{ -0.5f, 0.0f, 0.0f },
+			{ 0.0f, 0.0f, 1.0f } //青
         }
     };
 
@@ -85,7 +106,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     //インデックス配列
     uint16_t indices[] = {
         0,1,2,
-		0,2,3 // 四角形を2つの三角形に分割
+		0,2,3, // 四角形を2つの三角形に分割
+		0,3,4, // 五角形を3つの三角形に分割
     };
     IndexBuffer triangleIB;
     triangleIB.Init(sizeof(indices), 2);
@@ -117,7 +139,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         // 5. インデックスバッファを設定
         renderContext.SetIndexBuffer(triangleIB);
         // 6. ドローコール
-		renderContext.DrawIndexed(6); // 四角形を描画するために6インデックスを使用
+		renderContext.DrawIndexed(sizeof(indices)/ sizeof(indices[0])); // 四角形を描画するために6インデックスを使用
 
         /// //////////////////////////////////////
         // 絵を描くコードを書くのはここまで！！！
