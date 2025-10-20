@@ -105,7 +105,8 @@ float4 PSMain(SPSIn psIn) : SV_Target0
     }
 
     // 鏡面反射の強さを絞る
-    t = pow(t, 5.0f);
+    t = pow(t, 50.0f);
+    
 
     // 鏡面反射光を求める
     float3 specularLig = directionLight.color * t;
@@ -114,6 +115,7 @@ float4 PSMain(SPSIn psIn) : SV_Target0
     float3 lig = diffuseLig + specularLig;
 
     // step-1 ライトの効果を一律で底上げする
+    lig.xyz += 0.1f;
 
     float4 finalColor = g_texture.Sample(g_sampler, psIn.uv);
 
