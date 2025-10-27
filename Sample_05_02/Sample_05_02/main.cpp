@@ -19,6 +19,12 @@ struct Light
     float ptRange;          // 影響範囲
 
     // step-1 ライト構造体にスポットライト用のメンバ変数を追加
+	Vector3 spPosition;     // 位置
+	float pad3;             // パディング
+	Vector3 sPColor;        // カラー
+	float spRange;          // 影響範囲
+	Vector3 spDirection;    // 射出方向
+	float spAngle;          // 射出角度
 
     Vector3 eyePos;         // 視点の位置
     float pad4;
@@ -58,6 +64,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     InitAmbientLight(light);
 
     // step-2 スポットライトのデータを初期化する
+    light.spPosition = { 0.0f, 20.0f, 0.0f };
+
+    light.sPColor = { 10.0f, 10.0f, 10.0f };
+
+	light.spDirection = { 1.0f, -1.0f, 1.0f };
+	light.spDirection.Normalize();
+
+	light.spRange = 300.0f;
+
+    light.spAngle = Math::DegToRad(25.0f);
 
     // モデルを初期化する
     // モデルを初期化するための情報を構築する
@@ -79,8 +95,38 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         //////////////////////////////////////
 
         // step-3 コントローラー左スティックでスポットライトを移動させる
+		light.spPosition.x -= g_pad[0]->GetLStickXF();
+        if (g_pad[0]->IsPress(enButtonB))
+        {
+			light.spPosition.y += g_pad[0]->GetLStickYF();
+        }
+        else
+        {
+			light.spPosition.z -= g_pad[0]->GetLStickYF();
+        }
 
         // step-4 コントローラー右スティックでスポットライトを回転させる
+        Quaternion qRotY;
+        qRotY.SetRotationY(g_pad[0]->GetLStickXF() * 0.01f);
+
+		qRotY.Apply(light.spDirection);
+        
+		Vector3 rotAxis;
+        rotAxis.Cross(g_vec3AxisY, light.spDirection);
+
+        Quaternion qRotX;
+		qRotX.SetRotation(rotAxis, g_pad[0]->GetLStickYF() * 0.01f);
+
+		qRotX.Apply(light.spDirection);
+
+        Quaternion qRot;
+        qRot.SetRotation({ 0.0f, 0.0f, -1.0f }, light.spDirection);
+
+        lightModel.UpdateWorldMatrix(
+            light.spPosition,
+            qRot,
+            g_vec3One
+		);
 		
         // 背景モデルをドロー
         bgModel.Draw(renderContext);
