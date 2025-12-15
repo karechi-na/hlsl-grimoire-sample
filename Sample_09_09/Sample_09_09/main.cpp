@@ -24,6 +24,26 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     // ここから初期化を行うコードを記述する
     //////////////////////////////////////
 
+
+    // シェーダー側の b1 に接続する進行率（0.0 = 元, 1.0 = 完全ネガ）
+    float negaRate = 0.0f;
+    
+    /*struct WipeParam
+    {
+        Vector2 wipeDir;
+        float wipeSize;
+    };
+
+    WipeParam wipeParam;
+    wipeParam.wipeDir.Set(1.0f, 1.0f);
+    wipeParam.wipeDir.Normalize();
+    wipeParam.wipeSize = 0.0f;*/
+
+    // 進行方向（+1で増加、-1で減少）
+    float negaDir = 1.0f;
+    // 1フレームあたりの変化量（必要なら小さくしてよりゆっくりに）
+    const float negaSpeed = 0.01f;
+
     // Spriteの初期化
     // まずはSpriteクラスの初期化オブジェクトを作成する
     SpriteInitData spriteInitData;
@@ -38,10 +58,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     spriteInitData.m_width = FRAME_BUFFER_W;
     spriteInitData.m_height = FRAME_BUFFER_H;
 
-    // ワイプサイズ
-    float monochromeRate = 0.0f;
-    spriteInitData.m_expandConstantBuffer = &monochromeRate;
-    spriteInitData.m_expandConstantBufferSize = sizeof(monochromeRate);
+    
+
+    // ワイプ進行率をシェーダーに渡す（b1 の float として使用）
+    spriteInitData.m_expandConstantBuffer = &negaRate;
+    spriteInitData.m_expandConstantBufferSize = sizeof(negaRate);
+
 
     // Spriteクラスのオブジェクトを定義して初期化する
     Sprite test2D;
@@ -63,11 +85,19 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         //////////////////////////////////////
         // ここから絵を描くコードを記述する
         //////////////////////////////////////
-        // ワイプサイズを増やして少しずつワイプさせる
-        monochromeRate += 0.01f;
-        if (monochromeRate > 1.0f) {
-            monochromeRate = 1.0f;
+        negaRate += negaSpeed * negaDir;
+        if (negaRate >= 1.0f)
+        {
+            negaRate = 1.0f;
+            negaDir = -1.0f; // 反転しきったら巻き戻す
         }
+        else if (negaRate <= 0.0f)
+        {
+            negaRate = 0.0f;
+            negaDir = 1.0f; // 元に戻りきったら再び反転させる
+        }
+
+
         // スプライトのドローコールを実行する
         test2D.Draw(renderContext);
 

@@ -56,6 +56,13 @@ PSInput VSMain(VSInput In)
 float4 PSMain(PSInput In) : SV_Target0
 {
     // step-1 シンプレックスノイズを利用してノイズ加工を行う
+    float t = SimplexNoise(In.pos.xyz);
+    
+    t = (t - 0.5f) * 2.0f;
+    
+    float2 uv = In.uv + t * 0.01f;
+    
+    float4 color = colorTexture.Sample(Sampler, uv);
 
     return color;
 }
