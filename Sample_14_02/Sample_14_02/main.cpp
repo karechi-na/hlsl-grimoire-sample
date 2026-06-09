@@ -6,88 +6,132 @@
 // 関数宣言
 void InitRootSignature(RootSignature& rs);
 
+
+
+
+
+struct StealthCb
+{
+	Vector4 param;
+};
+
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////
 // ウィンドウプログラムのメイン関数
 ///////////////////////////////////////////////////////////////////
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-                    LPWSTR lpCmdLine, int nCmdShow)
+	LPWSTR lpCmdLine, int nCmdShow)
 {
-    // ゲームの初期化
-    InitGame(hInstance, hPrevInstance, lpCmdLine, nCmdShow, TEXT("Game"));
+	// ゲームの初期化
+	InitGame(hInstance, hPrevInstance, lpCmdLine, nCmdShow, TEXT("Game"));
 
-    //////////////////////////////////////
-    // ここから初期化を行うコードを記述する
-    //////////////////////////////////////
+	//////////////////////////////////////
+	// ここから初期化を行うコードを記述する
+	//////////////////////////////////////
 
-    // ルートシグネチャを作成
-    RootSignature rootSignature;
-    InitRootSignature(rootSignature);
+	// ルートシグネチャを作成
+	RootSignature rootSignature;
+	InitRootSignature(rootSignature);
 
-    //レンダリングパイプラインを初期化
-    myRenderer::RenderingEngine renderingEngine;
-    renderingEngine.Init();
+	//レンダリングパイプラインを初期化
+	myRenderer::RenderingEngine renderingEngine;
+	renderingEngine.Init();
 
-    // 背景モデルのレンダラーを初期化
-    myRenderer::ModelRender bgModelRender;
-    bgModelRender.InitDeferredRendering(renderingEngine, "Assets/modelData/bg/bg.tkm", true);
+	// 背景モデルのレンダラーを初期化
+	myRenderer::ModelRender bgModelRender;
+	bgModelRender.InitDeferredRendering(renderingEngine, "Assets/modelData/bg/bg.tkm", true);
 
-    // step-1 ティーポットモデルの描画処理を初期化
+	// step-1 ティーポットモデルの描画処理を初期化
 	myRenderer::ModelInitDataFR modelInitData;
 	modelInitData.m_tkmFilePath = "Assets/modelData/teapot.tkm";
 	modelInitData.m_fxFilePath = "Assets/shader/sample.fx";
 
-    // 【注目】メインレンダリングターゲットのスナップショットテクスチャを拡張SRVに指定する
-    modelInitData.m_expandShaderResoruceView[0] =
-        &renderingEngine.GetMainRenderTargetSnapshotDrawnOpacity();
+	// 【注目】メインレンダリングターゲットのスナップショットテクスチャを拡張SRVに指定する
+	modelInitData.m_expandShaderResoruceView[0] =
+		&renderingEngine.GetMainRenderTargetSnapshotDrawnOpacity();
 	myRenderer::ModelRender teapotModelRender;
 
-    // フォワードレンダリングの描画パスで実行されるように初期化する
-    teapotModelRender.InitForwardRendering(renderingEngine, modelInitData);
+
+
+
+	StealthCb stealthCb;
+	stealthCb.param = { 1.0f, 0.0f, 0.0f, 0.0f};
+	modelInitData.m_expandConstantBuffer = &stealthCb;
+	modelInitData.m_expandConstantBufferSize = sizeof(stealthCb);
+
+
+
+
+
+	// フォワードレンダリングの描画パスで実行されるように初期化する
+	teapotModelRender.InitForwardRendering(renderingEngine, modelInitData);
 	teapotModelRender.SetShadowCasterFlag(true);  // シャドウキャスターに設定する
 
-    teapotModelRender.UpdateWorldMatrix({ 0.0f, 20.0f, 0.0f }, g_quatIdentity, g_vec3One);
+	float teapotRotationAngle = 0.0f;
+	float alphaTimer = 0.0f;
 
-    //////////////////////////////////////
-    // 初期化を行うコードを書くのはここまで！！！
-    //////////////////////////////////////
-    auto& renderContext = g_graphicsEngine->GetRenderContext();
+	//////////////////////////////////////
+	// 初期化を行うコードを書くのはここまで！！！
+	//////////////////////////////////////
+	auto& renderContext = g_graphicsEngine->GetRenderContext();
 
-    // ここからゲームループ
-    while (DispatchWindowMessage())
-    {
-        // レンダリング開始
-        g_engine->BeginFrame();
-        g_camera3D->MoveForward(g_pad[0]->GetLStickYF());
-        g_camera3D->MoveRight(g_pad[0]->GetLStickXF());
-        g_camera3D->MoveUp(g_pad[0]->GetRStickYF());
+	// ここからゲームループ
+	while (DispatchWindowMessage())
+	{
+		// レンダリング開始
+		g_engine->BeginFrame();
+		g_camera3D->MoveForward(g_pad[0]->GetLStickYF());
+		g_camera3D->MoveRight(g_pad[0]->GetLStickXF());
+		g_camera3D->MoveUp(g_pad[0]->GetRStickYF());
 
-        //////////////////////////////////////
-        // ここから絵を描くコードを記述する
-        //////////////////////////////////////
+		//////////////////////////////////////
+		// ここから絵を描くコードを記述する
+		//////////////////////////////////////
 
-        bgModelRender.Draw();
+		bgModelRender.Draw();
 
-        // step-2 ティーポットモデルを描画
+		// step-2 ティーポットモデルを描画
+		teapotRotationAngle += Math::PI / 120.0f;
+
+		Quaternion rotY;
+		rotY.SetRotationY(teapotRotationAngle);
+		teapotModelRender.UpdateWorldMatrix({ 0.0f, 20.0f, 0.0f }, rotY, g_vec3One);
+
+
+
+
+		alphaTimer += 1.0f / 60.0f;
+		float alphaRate = (1.0f - cosf(alphaTimer / 5.0f * Math::PI * 2.0f)) * 0.5f;
+		stealthCb.param.x = alphaRate;
+
+
+
+
+
 		teapotModelRender.Draw();
 
-        //レンダリングパイプラインを実行
-        renderingEngine.Execute(renderContext);
+		//レンダリングパイプラインを実行
+		renderingEngine.Execute(renderContext);
 
-        /////////////////////////////////////////
-        // 絵を描くコードを書くのはここまで！！！
-        //////////////////////////////////////
-        // レンダリング終了
-        g_engine->EndFrame();
-    }
+		/////////////////////////////////////////
+		// 絵を描くコードを書くのはここまで！！！
+		//////////////////////////////////////
+		// レンダリング終了
+		g_engine->EndFrame();
+	}
 
-    return 0;
+	return 0;
 }
 
 // ルートシグネチャの初期化
 void InitRootSignature(RootSignature& rs)
 {
-    rs.Init(D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-            D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-            D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-            D3D12_TEXTURE_ADDRESS_MODE_WRAP);
+	rs.Init(D3D12_FILTER_MIN_MAG_MIP_LINEAR,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP);
 }
