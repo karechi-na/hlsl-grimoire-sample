@@ -39,6 +39,13 @@ Texture2D<float4> g_texture : register(t0);
 sampler g_sampler : register(s0);
 
 // step-1 ディザパターンを定義する
+static const int pattern[4][4] =
+{
+    { 0, 32, 8, 40},
+    { 48, 16, 56, 24},
+    { 12, 44, 4, 36},
+    { 60, 28, 52, 20}
+};
 
 /// <summary>
 /// モデル用の頂点シェーダーのエントリーポイント
@@ -62,5 +69,16 @@ SPSIn VSMain(SVSIn vsIn, uniform bool hasSkin)
 float4 PSMain(SPSIn psIn) : SV_Target0
 {
     // step-2 ディザパターンを利用してディザリングを実装する
-
+    // このピクセルのスクリーン座標系でのX座標、Y座標を4で割ったあまりを求める
+    int x = (int) fmod(psIn.pos.x, 4.0f);
+    int y = (int) fmod(psIn.pos.y, 4.0f);
+    
+    // 上で求めた、xとyを利用して、このピクセルぼディザリング閾値を取得する
+    int dither = pattern[y][x];
+    
+    // ディザリング閾値が50以下のピクセルはピクセルキルする
+    // clip()は引数の値がマイナスになるとピクセルキルが実行される
+    clip(dither - 50);
+    
+    return g_texture.Sample(g_sampler, psIn.uv);
 }

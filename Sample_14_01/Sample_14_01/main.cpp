@@ -31,6 +31,25 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     bgModelRender.InitDeferredRendering(renderingEngine, "Assets/modelData/bg/bg.tkm", true);
 
     // step-1 ティーポットの描画処理を初期化する
+	myRenderer::ModelInitDataFR modelInitData;
+	modelInitData.m_tkmFilePath = "Assets/modelData/teapot.tkm";
+	modelInitData.m_fxFilePath = "Assets/shader/sample.fx";
+
+    //【注目】拡張SRVにZPrepassで作成された深度テクスチャを指定する
+	modelInitData.m_expandShaderResoruceView[0] = 
+		&renderingEngine.GetZPrepassDepthTexture();
+
+    // 初期化情報を使って描画処理を初期化する
+	myRenderer::ModelRender teapotModelRender;
+
+    // InitForwardRendering() を利用すると、
+    // フォワードレンダリングの描画パスで描画される
+	teapotModelRender.InitForwardRendering(renderingEngine, modelInitData);
+
+	// シャドウキャスターフラグをオンにする
+	teapotModelRender.SetShadowCasterFlag(true);
+
+	float teapotRotationAngle = 0.0f;
 
     teapotModelRender.UpdateWorldMatrix({ 0.0f, 50.0f, 0.0f }, g_quatIdentity, g_vec3One);
 
@@ -55,6 +74,19 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         bgModelRender.Draw();
 
         // step-2 ティーポットを描画する
+        // 毎秒0.25回転（4秒で１回転）させる
+		// 60FPS想定：１フレームあたり π/120 ラジアン回転
+		// 計算式：（2π × 0.25回転/秒）/ 60フレーム/秒 ＝ π/120 ラジアン/フレーム
+        teapotRotationAngle += Math::PI / 120.0f;
+
+		// 回転クォータニオンを作成
+        Quaternion rotY;
+		rotY.SetRotationY(teapotRotationAngle);
+
+		// ティーポットのワールド行列を更新
+		teapotModelRender.UpdateWorldMatrix({ 0.0f, 50.0f, 0.0f }, rotY, g_vec3One);
+
+		teapotModelRender.Draw();
 
         //レンダリングエンジンを実行
         renderingEngine.Execute(renderContext);

@@ -58,6 +58,14 @@ SPSIn VSMain(SVSIn vsIn, uniform bool hasSkin)
     psIn.uv = vsIn.uv;
 
     // step-1 オブジェクトとカメラとの距離を求める
+    // オブジェクトの座標をワールド行列の平行移動成分から取得する
+    float4 objectPos = mWorld[3];
+    
+    // オブジェクトの座標をカメラ座標系に変換する
+    float4 objectPosInCamera = mul(mView, objectPos);
+    
+    // カメラからの距離を計算する
+    psIn.distToEye = length(objectPosInCamera);
 
     return psIn;
 }
@@ -75,12 +83,28 @@ float4 PSMain(SPSIn psIn) : SV_Target0
     int dither = pattern[y][x];
 
     // step-2 完全にクリップされる範囲を定義する
+    // カメラがオブジェクトのクリップ範囲内に入ると、完全にオブジェクトがクリップされる
+    // (この数値を変更すると、オブジェクトが完全に消える範囲が変わる)
+    float clipRange = 50.0f;
 
     // step-3 視点とクリップ範囲までの距離を計算する
+    // オブジェクトとカメラの距離が50以下になると
+    // psIn.distToEye - clipRangeの結果がマイナスになるので、tに0が代入される
+    // psIn.distToEyeが50以上なら、tには視点からクリップ範囲までの距離が計算される
+    float eyeToClipRange = max(0.0f, psIn.distToEye - clipRange);
 
     // step-4 クリップ率を求める
+    // clipRateは0～1の値を取り、clipRateが1になると完全にクリップされる
+    // 下記のコードは、視点とクリップ範の距離が100以下になると
+    // 線形にclipRateの1に近づいていき、eyeToClipRangeが0になると、
+    // clipRateは1になるように計算している
+    float clipRate = 1.0f - min(1.0f, eyeToClipRange / 100.0f);
 
     // step-5 クリップ率を利用してピクセルキルを行う
+    //clipRateの値は0～1の値を取る。tが0ならどのピクセルもクリップされない。
+    // clipRateの値が1になると、64以下のピクセルがクリップされるため、
+    // すべてのピクセルがクリップされる(ditherの値の最大値は62なので)
+    clip(dither - 64 * clipRate);
 
     float4 tex = g_texture.Sample( g_sampler, psIn.uv);
     return tex;

@@ -43,6 +43,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     light.color.z = 1.0f;
 
     // step-1 ライトの情報に視点の座標を追加
+	light.eyePos = g_camera3D->GetPosition();
 
     // モデルを初期化
     ModelInitData modelInitData;
@@ -72,6 +73,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     );
 
     // step-2 ピクセルのワールド座標を記録するためのG-Bufferを作成
+    RenderTarget worldPosRT;
+    worldPosRT.Create(
+        FRAME_BUFFER_W,
+        FRAME_BUFFER_H,
+        1,
+        1,
+        DXGI_FORMAT_R32G32B32A32_FLOAT,   // ワールド座標は精度が必要なので32bit floatにする
+        DXGI_FORMAT_UNKNOWN
+	);
 
     // ポストエフェクト的にディファードライティングを行うためのスプライトを初期化
     SpriteInitData spriteInitData;
@@ -85,6 +95,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     spriteInitData.m_textures[1] = &normalRT.GetRenderTargetTexture();
 
     // step-3 ディファードライティング用のテクスチャにワールド座標テクスチャを追加
+    spriteInitData.m_textures[2] = &worldPosRT.GetRenderTargetTexture();
 
     spriteInitData.m_fxFilePath = "Assets/shader/sprite.fx";
     spriteInitData.m_expandConstantBuffer = &light;
@@ -118,7 +129,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         // step-4 2番目のレンダリングターゲットにworldPosRTを追加
         RenderTarget* rts[] = {
             &albedRT,   // 0番目のレンダリングターゲット
-            &normalRT
+            &normalRT,
+            &worldPosRT // 2番目のレンダリングターゲット
         };
 
         // まず、レンダリングターゲットとして設定できるようになるまで待つ
