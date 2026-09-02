@@ -5,10 +5,12 @@
 struct OutputData
 {
     float averageScore; // 平均点
-    float maxScore;     // 最高点
-    float minScore;     // 最小点
+    float maxScore; // 最高点
+    float minScore; // 最小点
 
     // step-1 出力構造体にメンバーを追加する
+    int totalScore;
+    float deviation;
 };
 
 // 入力データにアクセスするための変数
@@ -25,7 +27,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     g_outputData[0].minScore = 100;
 
     int totalScore = 0;
-    for(int i = 0; i < NUM_STUDENT; i++)
+    for (int i = 0; i < NUM_STUDENT; i++)
     {
         totalScore += g_scores[i];
         g_outputData[0].maxScore = max(g_outputData[0].maxScore, g_scores[i]);
@@ -34,4 +36,16 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     g_outputData[0].averageScore = totalScore / NUM_STUDENT;
 
     // step-2 合計点を出力する
+    g_outputData[0].totalScore = totalScore;
+    
+    float dev = 0.0f;
+    for (int i = 0; i < NUM_STUDENT; i++)
+    {
+        float t = g_scores[i] - g_outputData[0].averageScore;
+        
+        dev += t * t;
+    }
+
+    g_outputData[0].deviation = sqrt(dev / NUM_STUDENT);
+
 }

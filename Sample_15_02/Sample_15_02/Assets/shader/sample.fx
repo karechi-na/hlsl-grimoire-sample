@@ -3,6 +3,8 @@
  */
 
 // step-7 t0、u0に設定されているバッファーにアクセスするための変数を定義
+StructuredBuffer<uint> inputImage : register(t0);
+RWStructuredBuffer<uint> outputBuffer : register(u0);
 
 
 /*!
@@ -34,4 +36,16 @@ float4 UnpackedRGBA32ToFloat4(uint In)
 void CSMain(uint3 DTid : SV_DispatchThreadID)
 {
     // step-8 入力データから画素を引っ張ってきてモノクロ化する
+    int imageIndex = DTid.x;
+    
+    uint iColor = inputImage[imageIndex];
+    
+    float4 color = UnpackedRGBA32ToFloat4(iColor);
+
+    float Y = 0.29900 * color.r + 0.58700 * color.g + 0.11400 * color.b;
+    color.rgb = Y;
+    color.a = 1.0f;
+    
+    outputBuffer[imageIndex] = PackedFloat4ToRGBA32(color);
+
 }

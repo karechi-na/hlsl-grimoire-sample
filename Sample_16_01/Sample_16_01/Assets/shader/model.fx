@@ -3,8 +3,15 @@
  */
 
 // step-7 ポイントライト構造体を定義する
+struct SPointLight
+{
+    float3 position;
+    float3 color;
+    float range;
+};
 
 // step-8 ポイントライトの数を表す定数を定義する
+static const int NUM_POINT_LIGHT = 1000;
 
 // モデル用の定数バッファー
 cbuffer ModelCb : register(b0)
@@ -15,6 +22,10 @@ cbuffer ModelCb : register(b0)
 };
 
 // step-9 ポイントライトの定数バッファーにアクセスするための変数を定義する
+cbuffer PointLightCb : register(b1)
+{
+    SPointLight pointsLights[NUM_POINT_LIGHT];
+};
 
 // 頂点シェーダーへの入力
 struct SVSIn
@@ -69,9 +80,20 @@ float4 PSMain(SPSIn psIn) : SV_Target0
     float3 lig = 0.0f;
 
     // step-10 ポイントライトから光によるLambert拡散反射を計算する
+    for (int i = 0; i < NUM_POINT_LIGHT; i++)
+    {
+        float3 ligDir = normalize(psIn.worldPos = pointsLights[i].position);
+
+        float distance = length(psIn.worldPos = pointsLights[i].position);
+        
+        float t = max(0.0f, dot(-ligDir, psIn.normal));
+
+        float affect = 1.0f - min(1.0f, distance / pointsLights[i].range);
+        lig += pointsLights[i].color * t * affect;
+    }
 
     // 環境光を加算
-    lig += 0.3f;
+        lig += 0.3f;
     albedo.xyz *= lig;
     return albedo;
 }
